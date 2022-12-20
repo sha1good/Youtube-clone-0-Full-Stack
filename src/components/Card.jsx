@@ -1,5 +1,8 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { format } from "timeago.js";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Container = styled.div`
   width: ${(props) => props.type !== "sm" && "360px"};
@@ -18,7 +21,7 @@ const Img = styled.img`
 
 const Details = styled.div`
   display: flex;
-  margin-top: ${(props) => props.type === "sm" ? "" : "16px"};
+  margin-top: ${(props) => (props.type === "sm" ? "" : "16px")};
   gap: 12px;
   flex: 1;
 `;
@@ -50,25 +53,59 @@ const Info = styled.div`
   color: ${({ theme }) => theme.textSoft};
 `;
 
-const Card = ({ type }) => {
+const Error = styled.span`
+  color: red;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  height: 100vh;
+  right: 0;
+  left: 0;
+  margin: auto;
+`;
+
+const Card = ({ type, video }) => {
+  //Channel here is the same as the user
+  const [channels, setChannels] = useState({});
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const getVideos = async () => {
+      try {
+        const response = await axios.get(`/users/find/${video.userId}`);
+        setChannels(response.data);
+      } catch (error) {
+        setError(error);
+      }
+    };
+    getVideos();
+  }, [video]);
+
   return (
-    <Link to="/video/test" style={{ textDecoration: "none" }}>
+    <Link to={`/video/${video._id}`} style={{ textDecoration: "none" }}>
       <Container type={type}>
-        <Img
-          type={type}
-          src="https://images.unsplash.com/photo-1664575262619-b28fef7a40a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxNnx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60"
-        />
+        <Img type={type} src={video.imgUrl} />
         <Details type={type}>
           <ChannelImg
             type={type}
-            src="https://images.unsplash.com/photo-1664575262619-b28fef7a40a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxNnx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60"
+            src={
+              channels.img
+                ? channels.img
+                : "https://images.unsplash.com/photo-1664575262619-b28fef7a40a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxNnx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60"
+            }
           />
           <Texts>
-            <Title>Sha1 Video Test</Title>
-            <ChannelName>Sha1 Dev</ChannelName>
-            <Info>6600 views . 1 day ago</Info>
+            <Title>{video.title}</Title>
+            <ChannelName>{channels.username}</ChannelName>
+            <Info>
+              {video.views} views . {format(video.createdAt)}
+            </Info>
           </Texts>
         </Details>
+        {error && <Error>Unable to fetch video data!</Error>}
       </Container>
     </Link>
   );

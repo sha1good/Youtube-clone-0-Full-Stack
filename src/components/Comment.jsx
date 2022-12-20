@@ -1,4 +1,8 @@
+import axios from "axios";
+import { useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
+import { format } from "timeago.js";
 
 const Container = styled.div`
   display: flex;
@@ -37,19 +41,33 @@ const Text = styled.span`
   font-size: 14px;
 `;
 
-const Comment = () => {
+const Comment = ({ comment }) => {
+  const [channel, setChannel] = useState({});
+
+  useEffect(() => {
+    const fetchComment = async () => {
+      const response = await axios.get(`/users/find/${comment.userId}`);
+      setChannel(response.data);
+    };
+    fetchComment();
+  }, [comment.userId]);
   return (
     <Container>
-      <Avatar src="https://images.unsplash.com/photo-1664575262619-b28fef7a40a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxNnx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60" />
+      <Avatar
+        src={
+          channel?.img
+            ? channel.img
+            : "https://images.unsplash.com/photo-1664575262619-b28fef7a40a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxNnx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60"
+        }
+      />
       <CommentDetails>
         <Name>
-          Sheriff Adebisi <Date>20 days ago</Date>
+          {channel.username} <Date>{format(comment.createdAt)}</Date>
         </Name>
         <Text>
-          Lorem ipsum dolor, sit amet consectetur adipisicing elit. Doloribus
-          laborum delectus unde quaerat dolore culpa sit aliquam at. Vitae
-          facere ipsum totam ratione exercitationem. Suscipit animi accusantium
-          dolores ipsam ut.
+          {comment?.desc
+            ? comment.desc
+            : "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Doloribusdolores ipsam ut."}
         </Text>
       </CommentDetails>
     </Container>
